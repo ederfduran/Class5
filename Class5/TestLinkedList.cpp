@@ -76,10 +76,16 @@ void cpp_class5_test::testClone()
 	cpp_class5::Node* myListCloned = cpp_class5::clone(myList);
 	assert(myList!=myListCloned && myListCloned->val==10.f);
 	
-	myList->val = 20.f;
-	assert(myList->val != myListCloned->val);
-	cpp_class5::clear(myList);
-	cpp_class5::clear(myListCloned);
+	cpp_class5::Node* myList2 = cpp_class5::createList(10.f);
+	cpp_class5::push_back(myList2, 20.f);
+	cpp_class5::push_back(myList2, 30.f);
+	cpp_class5::push_back(myList2, 40.f);
+	cpp_class5::push_back(myList2, 50.f);
+
+	cpp_class5::Node * myListCloned2 = cpp_class5::clone(myList2);
+	for (unsigned int i = 0;i<5;i++) {
+		assert(cpp_class5::getElementAtIndex(myList2,i) == cpp_class5::getElementAtIndex(myListCloned2, i));
+	}
 }
 
 void cpp_class5_test::testGetElementAtIndex()

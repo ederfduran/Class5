@@ -3,7 +3,6 @@
 #include <limits>
 #include "LinkedList.h"
 
-
 cpp_class5::Node * cpp_class5::createList(const float inVal)
 {
 	Node* const newNode = reinterpret_cast<Node*>(malloc(sizeof(Node)) );
@@ -15,8 +14,14 @@ cpp_class5::Node * cpp_class5::createList(const float inVal)
 cpp_class5::Node *& cpp_class5::getLastNode(Node *& list)
 {
 	assert(list);
-	if (list->nextNodePtr!=nullptr) {
-		return getLastNode(list->nextNodePtr);
+	Node* myList = list;
+	while (myList->nextNodePtr != nullptr)
+	{
+		Node *& lastNode = myList->nextNodePtr;
+		if (lastNode->nextNodePtr == nullptr) {
+			return lastNode;
+		}
+		myList = myList->nextNodePtr;
 	}
 	return list;
 }
@@ -36,16 +41,17 @@ void cpp_class5::pop_back(Node* & node ) {
 	lastNode = nullptr;
 }
 
-void cpp_class5::clear(Node*& node) {
-	if (!node) {
-		return;
+void cpp_class5::clear(Node*& list) {
+	assert(list);
+	if (Node* nodeToClear = list->nextNodePtr) {
+		while (nodeToClear) {
+			Node* nodeCopy = nodeToClear->nextNodePtr;
+			free(nodeToClear);
+			nodeToClear = nodeCopy;
+		}
 	}
-	Node*& nodeToClear = getLastNode(node);
-	if (nodeToClear) {
-		free(nodeToClear);
-		nodeToClear = nullptr;
-		clear(node);
-	}
+	free(list);
+	list = nullptr;
 }
 
 unsigned int cpp_class5::getElementCount(Node* list) {
@@ -60,34 +66,38 @@ unsigned int cpp_class5::getElementCount(Node* list) {
 	return elementCounter;
 }
 
-cpp_class5::Node* cpp_class5::clone(Node* nodeToClone) {
-	assert(nodeToClone);
-	Node* clonedNode = createList(nodeToClone->val);
-	*clonedNode = *nodeToClone;
-	return clonedNode;
+cpp_class5::Node* cpp_class5::clone(Node* listToClone) {
+	assert(listToClone);
+	Node* clonedList = createList(listToClone->val);
+	const unsigned int count = getElementCount(listToClone);
+	for (unsigned int i = 1;i<count;i++){
+		push_back(clonedList,getElementAtIndex(listToClone,i));
+	}
+	return clonedList;
 }
 
-cpp_class5::Node* cpp_class5::getNodeAtIndex(Node* list, unsigned int index) {
+cpp_class5::Node* cpp_class5::getNodeAtIndex(Node* list,const unsigned int index) {
 	if (index > getElementCount(list)-1) {
 		return nullptr;
 	}
-	while (index != 0)
+	unsigned int indexGoal = index;
+	while (indexGoal != 0)
 	{
 		list = list->nextNodePtr;
-		index--;
+		indexGoal--;
 	}
 	assert(list != nullptr);
 	return list;
 }
 
-float cpp_class5::getElementAtIndex(Node* list, unsigned int index) {
+float cpp_class5::getElementAtIndex(Node* list, const unsigned int index) {
 	assert(list);
 	Node* nodeToRead = getNodeAtIndex(list,index);
 	assert(nodeToRead);
 	return nodeToRead->val;
 }
 
-void cpp_class5::insert(Node*& list, unsigned int index, float value) {
+void cpp_class5::insert(Node*& list,const unsigned int index,const float value) {
 	
 	assert(list&& index < getElementCount(list));
 	Node* nodeToRead = getNodeAtIndex(list, index);
@@ -98,7 +108,7 @@ void cpp_class5::insert(Node*& list, unsigned int index, float value) {
 	nodeToRead->nextNodePtr = newNode;
 }
 
-void cpp_class5::erase(Node*&list,unsigned int index) {
+void cpp_class5::erase(Node*&list,const unsigned int index) {
 	assert(list && index < getElementCount(list));
 	if (index==0) {
 		Node* newListPtr = list->nextNodePtr;
@@ -120,12 +130,14 @@ bool cpp_class5::areEqual(const float a, const float b) {
 }
 
 unsigned int cpp_class5::getOccurrenceCount(Node* list, const float num){
-	const unsigned int count = getElementCount(list);
+	
 	unsigned int occurence = 0;
-	for (unsigned int i = 0;i<count;i++) {
-		if (areEqual(getElementAtIndex(list, i),num)) {
+	while (list!= nullptr)
+	{
+		if (list->val== num) {
 			occurence++;
 		}
+		list = list->nextNodePtr;
 	}
 	return occurence;
 }
@@ -133,25 +145,38 @@ unsigned int cpp_class5::getOccurrenceCount(Node* list, const float num){
 void cpp_class5::eraseAllOccurrences(Node *& list, const float num)
 {
 	assert(list);
-	unsigned int count = getElementCount(list);
-	for (unsigned int i = 0;i < count ;i++) {
-		float a = getElementAtIndex(list, i);
-		if (areEqual(getElementAtIndex(list, i), num)) {
-			erase(list,i);
-			// the list is runtime updated 
-			count = getElementCount(list);
-			i--;  
+	Node* listCounter = list;
+	unsigned int counter = 0;
+	while (listCounter!= nullptr)
+	{
+		if (areEqual(listCounter->val,num)) {
+			erase(list,counter);
+			listCounter = getNodeAtIndex(list,counter);
+			continue;
 		}
+		counter++;
+		listCounter = listCounter->nextNodePtr;
 	}
 }
 
 void cpp_class5::reverse(Node *& list)
 {
-	unsigned const int count = getElementCount(list);
-	unsigned const int halfCount = static_cast<int>(count / 2);
-	for (unsigned int i = 0; i < halfCount; i++) {
-		float buff = getElementAtIndex(list,count-1-i);
-		getNodeAtIndex(list, count - 1 - i)->val = getElementAtIndex(list,i);
-		getNodeAtIndex(list, i)->val = buff;
+	if (getLastNode(list) == list) {
+		return;
 	}
+	Node* listCopy = list;
+	Node* nodeBuffer[2] = { nullptr ,nullptr};
+	
+	nodeBuffer[0] = listCopy->nextNodePtr;
+	nodeBuffer[1] = nodeBuffer[0]->nextNodePtr;
+	listCopy->nextNodePtr = nullptr;
+		
+	while (nodeBuffer[0] != nullptr) {
+		nodeBuffer[0]->nextNodePtr = listCopy;
+		listCopy = nodeBuffer[0];
+		nodeBuffer[0] = nodeBuffer[1] ? nodeBuffer[1] : nullptr;
+		nodeBuffer[1] = (nodeBuffer[1] && nodeBuffer[1]->nextNodePtr) ? nodeBuffer[1]->nextNodePtr : nullptr;
+	}
+
+	list = listCopy;
 }

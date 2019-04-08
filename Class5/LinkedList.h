@@ -10,13 +10,13 @@ namespace cpp_class5 {
 	};
 
 	Node* createList(const float val);
-	Node*& getLastNode(Node*& list);
+	Node*& getLastNode( Node*& list);
 	void push_back(Node * list, const float val);
 	void pop_back(Node* & node);
-	void clear(Node *& node);
+	void clear(Node *& list);
 	unsigned int getElementCount(Node* node);
-	Node* clone(Node* nodeToClone);
-	Node* getNodeAtIndex(Node* list, unsigned int index);
+	Node* clone(Node* listToClone);
+	Node* getNodeAtIndex(Node* list, const unsigned int index);
 	float getElementAtIndex(Node* node,unsigned int index);
 	void insert(Node *& list,unsigned int index, float value);
 	void erase(Node*& list, unsigned int index);
